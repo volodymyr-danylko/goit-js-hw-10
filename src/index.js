@@ -2,19 +2,19 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import debounce from 'lodash.debounce';
 import { fetchCountries } from './fetchCountries';
 
-import './css/styles.css';
+import './scss/styles.scss';
 
 const DEBOUNCE_DELAY = 300;
 
 const input = document.getElementById('search-box');
-const list = document.querySelector('.country-list');
-const info = document.querySelector('.country-info');
+const countryList = document.querySelector('.country-list');
+const countryInfo = document.querySelector('.country-info');
 
 const onInputChanged = event => {
-  list.innerHTML = '';
-  info.innerHTML = '';
+  countryList.innerHTML = '';
+  countryInfo.innerHTML = '';
 
-  const searchTerm = input.value.trim();
+  const searchTerm = event.target.value.trim();
 
   fetchCountries(searchTerm)
     .then(data => {
@@ -24,12 +24,10 @@ const onInputChanged = event => {
         );
       }
       if (data.length < 10 && data.length > 1) {
-        console.log(data);
-        data.forEach(country => {
-          console.log(country);
-          list.insertAdjacentHTML(
+        data.forEach(({ name, flags }) => {
+          countryList.insertAdjacentHTML(
             'beforeend',
-            countryListTemplate(country.name.official, country.flags.svg)
+            countryListTemplate(name.official, flags.svg)
           );
         });
       }
@@ -37,7 +35,7 @@ const onInputChanged = event => {
       if (data.length === 1) {
         const { name, capital, flags, population, languages } = data[0];
         const languageList = Object.values(languages).join(', ');
-        info.innerHTML = countryTemplate(
+        countryInfo.innerHTML = countryTemplate(
           name.official,
           flags.svg,
           capital,
@@ -46,40 +44,35 @@ const onInputChanged = event => {
         );
       }
     })
-    .catch(err => {
-      console.log(err);
-      if (err.message === '404') {
-        Notiflix.Notify.failure('Oops, there is no country with that name');
+    .catch(error => {
+      if (error.message === '404') {
+        Notify.failure('Oops, there is no country with that name');
       }
     });
 };
 
 const countryListTemplate = (name, flag) => `
-<li class="country-list-item">
-     <img src="${flag}" width="40" height="30">
+  <li class="country-list-item">
+    <img src="${flag}" >
     <p class="country">${name}</p>
-</li>`;
+  </li>`;
 
 const countryTemplate = (name, flag, capital, population, languages) => `
-<div class="info">
-  <div class="top">
-    <img src="${flag}" width="40" height="30">
+  <div class="header">
+    <img src="${flag}">
     <h2>${name}</h2>
   </div>
-  <ul class='country-info-list'>
+  <ul>
     <li>
-      <p>Capital</p>
-      <p>${capital}</p>
+      <p>Capital: <span>${capital}</spanp></p>
     </li>
     <li>
-      <p>Population</p>
-      <p>${population}</p>
+      <p>Population:  <span>${population}</span></p>
     </li>
     <li>
-      <p>Languages</p>
-      <p>${languages}</p>
+      <p>Languages: <span>${languages}</span></p>
     </li>
-  </div>
-</div>`;
+  </ul>
+`;
 
 input.addEventListener('input', debounce(onInputChanged, DEBOUNCE_DELAY));
